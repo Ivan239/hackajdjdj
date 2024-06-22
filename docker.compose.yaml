@@ -5,6 +5,7 @@ services:
       - "0.0.0.0:6333:6333"
     volumes:
       - qdrant_data:/data
+      - ./data/qdrant:/data
     environment:
       - QDRANT_STORAGE_PATH=/data
       - QDRANT_LOG_LEVEL=debug
@@ -32,6 +33,7 @@ services:
       - "0.0.0.0:8080:8080"
     volumes:
       - pocket_data:/pb/pb_data
+      - ./data/pocket:/pb/pb_data
 
   pocket_db_setup:
     image: alpine/curl
@@ -43,21 +45,32 @@ services:
     depends_on:
       - pocket_db
 
-  compute:
-    build: ./compute
-    ports:
-      - "8000:8001"
-    depends_on:
-      - pocket_db
-      - pocket_db_setup
+  # compute:
+  #   build: ./compute
+  #   ports:
+  #     - "8000:8001"
+  #   depends_on:
+  #     - pocket_db
+  #     - pocket_db_setup
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - malevich_data:/malevich
+  #     - ./data/malevich:/malevich
+  #   entrypoint: uvicorn api.app:app --host 0.0.0.0 --port 8001
+
+  audio_db:
+    image: postgres
     env_file:
       - .env
+    ports:
+      - "0.0.0.0:5432:5432"
     volumes:
-      - malevich_data:/malevich
-    entrypoint: uvicorn api.app:app --host 0.0.0.0 --port 8001
-
+    - audio_data:/var/lib/postgresql
+    - ./data/audio:/var/lib/postgresql
 
 volumes:
   qdrant_data:
   pocket_data:
   malevich_data:
+  audio_data:

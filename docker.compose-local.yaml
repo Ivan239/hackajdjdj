@@ -5,4 +5,3 @@ services:
         - malevich_data:/malevich
       entrypoint: >
           uvicorn api.app:app --host 0.0.0.0 --reload --port 8001
-      env_file: .dev.env
