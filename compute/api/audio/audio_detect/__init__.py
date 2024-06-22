@@ -1,4 +1,4 @@
 from .fingerprint import Fingerprint
-from .pbman import PBManager
+from .dbman import DBManager
 from .reader import read
 from .recognizer import Recognizer

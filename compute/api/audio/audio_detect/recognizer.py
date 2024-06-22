@@ -1,13 +1,12 @@
-import asyncio
 from itertools import groupby
 import tempfile
 
 import numpy as np
 import requests
 from .reader import read
-from .pbman import PBManager
+from .dbman import DBManager
 from .fingerprint import Fingerprint
-from ...schema.audio import (
+from schema.audio import (
     Dataset, 
     FingerprintData, 
     RecordData, 
@@ -25,10 +24,10 @@ with open(cfg_path) as cfg:
 
 class Recognizer:
     
-    def __init__(self, pbman: PBManager):
-        self._pbman = pbman
+    def __init__(self, dbman: DBManager):
+        self._dbman = dbman
 
-    async def upload_record(self, data: Dataset):
+    def upload_record(self, data: Dataset):
         fingerprints: list[FingerprintData] = []
         record: RecordData = []
         record_id = data.record_id
@@ -58,50 +57,47 @@ class Recognizer:
                 'fingerprinted': True
             })
 
-            await asyncio.gather(*[
-                self._pbman.upload_fingerprint(fingerprint) 
-                for fingerprint in fingerprints
-            ])
-            await asyncio.create_task(
-                self._pbman.upload_record(record)
-            )
+        self._dbman.upload_record(record)
+        # for fingerprint in fingerprints:
+        self._dbman.upload_fingerprints(fingerprints) 
 
-    async def upload_dataset(self, data: list[Dataset]):
+    def upload_dataset(self, data: list[Dataset]):
         fingerprints: list[FingerprintData] = []
         records: list[RecordData] = []
         for elem in data:
             record_id = elem.record_id
-            with VideoFileClip(requests.get(elem.filename).content) as clip:
-                with NamedTemporaryFile(f'{record_id}.wav') as file:
-                    clip.audio.write_audiofile(file.name, fps=16000)
-                    y, _ = read(file.name)
-            hashes = Fingerprint(y)
-            seen: set[tuple[str, int]] = set()
-            for hash, offset in hashes:
-                if (hash, offset) in seen:
-                    continue
-                fingerprint_data: FingerprintData = FingerprintData(**{
-                    'hash': hash,
+            with tempfile.NamedTemporaryFile('wb', suffix='.mp4') as tf:
+                tf.write(requests.get(elem.filename).content)
+                tf.seek(0)
+                with VideoFileClip(tf.name) as clip:
+                    with NamedTemporaryFile('wb', suffix='.wav') as file:
+                        clip.audio.write_audiofile(file.name, fps=16000)
+                        file.seek(0)
+                        y, _ = read(file.name)
+                hashes = Fingerprint(y)
+                seen: set[tuple[str, int]] = set()
+                for hash, offset in hashes:
+                    if (hash, offset) in seen:
+                        continue
+                    fingerprint_data: FingerprintData = FingerprintData(**{
+                        'hash': hash,
+                        'record_id': record_id,
+                        'offset': offset
+                    })
+                    fingerprints.append(fingerprint_data)
+                    seen.add((hash, offset))
+
+                record_data: RecordData = RecordData(**{
                     'record_id': record_id,
-                    'offset': offset
+                    'fingerprinted': True
                 })
-                fingerprints.append(fingerprint_data)
-                seen.add((hash, offset))
+                records.append(record_data)
+        
+        # for record in records:
+        self._dbman.upload_records(records)
 
-            record_data: RecordData = RecordData(**{
-                'record_id': record_id,
-                'fingerprinted': True
-            })
-            records.append(record_data)
-
-        await asyncio.gather(*[
-            self._pbman.upload_fingerprint(fingerprint) 
-            for fingerprint in fingerprints
-        ])
-        await asyncio.gather(*[
-            self._pbman.upload_record(record)
-            for record in records
-        ])
+        # for fingerprint in fingerprints:
+        self._dbman.upload_fingerprints(fingerprints) 
 
 
     def _align_offsets(
@@ -136,7 +132,7 @@ class Recognizer:
         record_results = []
         for record_id, offset, _ in record_matches[:top_n]:
             hashes_matched = dedup_hashes[record_id]
-            record_hashes = len(self._pbman._filter('fingerprints', filter=f'(record_id="{record_id}")'))
+            record_hashes = len(self._dbman.fingerprints_by(record_id))
             result: MatchResult = {
                 'record_id': record_id,
                 'offset': offset,
@@ -160,7 +156,7 @@ class Recognizer:
         if end:
             end *= default_cfg.sample_rate
         hashes = set(Fingerprint(y[start:end]))
-        matches, dedup_hashes = self._pbman.match_fingerprints(hashes)
+        matches, dedup_hashes = self._dbman.match_fingerprints(hashes)
         results = self._align_offsets(matches, dedup_hashes, len(hashes))
         return results
     
@@ -170,6 +166,6 @@ class Recognizer:
         y: np.array,
     ) -> list[MatchResult]:
         hashes = set(Fingerprint(y))
-        matches, dedup_hashes = self._pbman.match_fingerprints(hashes)
+        matches, dedup_hashes = self._dbman.match_fingerprints(hashes)
         results = self._align_offsets(matches, dedup_hashes, len(hashes))
         return results
