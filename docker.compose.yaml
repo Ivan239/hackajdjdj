@@ -41,23 +41,23 @@ services:
     env_file:
       - .env
     entrypoint: >
-      curl -X POST http://pocket_db:8080/api/admins --header 'Content-Type: application/json' -d '{"email": "'"$PB_ADMIN_USER"'", "password": "'"$PB_ADMIN_PASS"'", "passwordConfirm": "'"$PB_ADMIN_PASS"'"}'
+      curl -X POST http://$DATABASE_URL:8080/api/admins --header 'Content-Type: application/json' -d '{"email": "'"$PB_ADMIN_USER"'", "password": "'"$PB_ADMIN_PASS"'", "passwordConfirm": "'"$PB_ADMIN_PASS"'"}'
     depends_on:
       - pocket_db
 
-  # compute:
-  #   build: ./compute
-  #   ports:
-  #     - "8000:8001"
-  #   depends_on:
-  #     - pocket_db
-  #     - pocket_db_setup
-  #   env_file:
-  #     - .env
-  #   volumes:
-  #     - malevich_data:/malevich
-  #     - ./data/malevich:/malevich
-  #   entrypoint: uvicorn api.app:app --host 0.0.0.0 --port 8001
+  compute:
+    build: ./compute
+    ports:
+      - "8000:8001"
+    depends_on:
+      - pocket_db
+      - pocket_db_setup
+    env_file:
+      - .env
+    volumes:
+      - malevich_data:/malevich
+      - ./data/malevich:/malevich
+    entrypoint: uvicorn api.app:app --host 0.0.0.0 --port 8001
 
   audio_db:
     image: postgres

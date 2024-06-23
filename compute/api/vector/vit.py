@@ -19,7 +19,7 @@ class VitImageEmbedder(BaseImageEmbedder):
         
         
     
-    def vectorize(self, *images: Image.Image, batch_size: int) -> Iterable[list[float]]:                    
+    def vectorize(self, *images: Image.Image, batch_size: int) -> Iterable[list[float]]:                 
         with torch.no_grad():
             current_batch = []
             for image in images:
@@ -34,6 +34,12 @@ class VitImageEmbedder(BaseImageEmbedder):
                     embeddings = outputs.last_hidden_state[:, 0, :].cpu().tolist()
                     for embedding in embeddings:
                         yield embedding
+                    
+                    del embeddings
+                    del outputs
+                    del batch_inputs
+                    
+                    torch.cuda.empty_cache()
                     current_batch = []
 
             if current_batch:
@@ -45,3 +51,12 @@ class VitImageEmbedder(BaseImageEmbedder):
                 embeddings = outputs.last_hidden_state[:, 0, :].cpu().tolist()
                 for embedding in embeddings:
                     yield embedding
+
+
+                del embeddings
+                del outputs
+                del batch_inputs
+                
+                torch.cuda.empty_cache()
+                
+                

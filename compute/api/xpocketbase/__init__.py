@@ -19,6 +19,21 @@ try:
 
     try:
         client.collections.create(body_params={
+            "name": "moderation_sessions",
+            "type": "base",
+            "schema": [
+                {
+                    "name": "name",
+                    "type": "text",
+                }
+            ]
+        }
+    )
+    except ClientResponseError as e:
+        uv_logger.error(f"Failed to create `moderation_sessions`: {e.status} {e.data}")
+
+    try:
+        client.collections.create(body_params={
             "name": "videos",
             "type": "base",
             "schema": [
@@ -55,12 +70,32 @@ try:
                     "type": "select",
                     "options":{
                         "maxSelect": 1,
-                        "values": ["index", "test"]
+                        "values": ["index", "valid", "test"]
                     }
+                },
+                {
+                    "name": "checked",
+                    "type": "bool",
+                },
+                {
+                    "name": "audio_indexed",
+                    "type": "bool",
+                },
+                {
+                    "name": "video_indexed",
+                    "type": "bool",
                 },
                 {
                     "name": "fps",
                     "type": "number",
+                },
+                {
+                    "name": "moderation_session",
+                    "type": "relation",
+                    "options": {
+                        "collectionId": client.collections.get_one("moderation_sessions").id,
+                        "maxSelect": 1
+                    }
                 }
             ]
         }
@@ -69,55 +104,34 @@ try:
         uv_logger.error(f"Failed to create `videos`: {e.status} {e.data}")
 
     video_id = client.collections.get_one("videos").id
-
-    try:
-        client.collections.create(body_params={
-            "name": "video_embs",
-            "type": "base",
-            "schema": [
-                {
-                    "name": "frame",
-                    "type": "number",
-                },
-                {
-                    "name": "second",
-                    "type": "number",
-                },
-                {
-                    "name": "video_id",
-                    "type": "relation",
-                    "options": {
-                        "collectionId": video_id
-                    }
-                },
-                {
-                    "name": "width",
-                    "type": "number",
-                },
-                {
-                    "name": "height",
-                    "type": "number",
-                },
-                {
-                    "name": "qdrant_point_id",
-                    "type": "text",
-                }   
-            ]
-        }
-    )
-    except ClientResponseError as e:
-        uv_logger.error(f"Failed to create `video_embs`: {e.status} {e.data}")
         
     try:
         client.collections.create(body_params={
-            "name": "video_probs",
+            "name": "violations",
             "type": "base",
             "schema": [
                 {
-                    "name": "video_id",
+                    "name": "source_video_id",
                     "type": "relation",
                     "options": {
-                        "collectionId": video_id
+                        "collectionId": video_id,
+                        "maxSelect": 1
+                    }
+                },
+                {
+                    "name": "violation_video_id",
+                    "type": "relation",
+                    "options": {
+                        "collectionId": video_id,
+                        "maxSelect": 1
+                    }
+                },
+                {
+                    "name": "moderation_session",
+                    "type": "relation",
+                    "options": {
+                        "collectionId": client.collections.get_one("moderation_sessions").id,
+                        "maxSelect": 1
                     }
                 },
                 {
@@ -129,47 +143,43 @@ try:
                     "type": "number",
                 },
                 {
-                    "name": "originStart",
+                    "name": "original_start",
                     "type": "number",
                 },
                 {
-                    "name": "originEnd",
+                    "name": "original_end",
                     "type": "number",
-                }   
+                },
+                {
+                    "name": "max_score",
+                    "type": "number",
+                },
+                {
+                    "name": "min_score",
+                    "type": "number",
+                },
+                {
+                    "name": "avg_score",
+                    "type": "number",
+                },
+                {
+                    "name": "std_score",
+                    "type": "number",
+                },
+                {
+                    "name": "marked_hard",
+                    "type": "bool",
+                },
+                {
+                    "name": "discarded",
+                    "type": "bool",
+                }
+                
             ]
         }
     )
     except ClientResponseError as e:
         uv_logger.error(f"Failed to create `video_probs`: {e.status} {e.data}")
-        
-    try:
-        client.collections.create(body_params={
-            "name": "fingerprints",
-            "type": "base",
-            "schema": [
-                {
-                    "name": "hash",
-                    "type": "text",
-                    "unique": True,
-                    "required": True
-                },
-                {
-                    "name": "record_id",
-                    "type": "text",
-                    "unique": True,
-                    "required": True
-                },
-                {
-                    "name": "offset",
-                    "type": "number",
-                    "unique": True,
-                    "required": True
-                }
-            ]
-        }
-    )
-    except ClientResponseError as e:
-        uv_logger.error(f"Failed to create `fingerprints`: {e.status} {e.data}")
         
 except Exception:
     warnings.warn("Could not initialize the Pocketbase client")

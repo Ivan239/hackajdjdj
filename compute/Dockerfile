@@ -11,11 +11,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./api /app/api
 
-FROM system-build as app-build
-
-COPY malevich.yaml /app/malevich.yaml
-RUN touch malevich.secrets.yaml
-RUN malevich restore
-
 ENTRYPOINT ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8001"]
 

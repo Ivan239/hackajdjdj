@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .log import logger  # noqa: F401
-from .routes import index, video, audio
+from .routes import video, index, moderation
 from .xpocketbase import client # noqa: F401
 
 app = FastAPI()
@@ -18,4 +18,6 @@ app.add_middleware(
 
 app.include_router(video.router)
 app.include_router(index.router)
-app.include_router(audio.router)
+app.include_router(moderation.router)
+# app.include_router(audio.router)
+# app.include_router(mock_video.router)

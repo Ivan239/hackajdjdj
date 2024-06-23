@@ -1,0 +1,78 @@
+import datetime
+from pydantic import BaseModel
+
+
+class SingleVideo(BaseModel):
+    """Return type for upload_video"""
+    
+    id: str
+    created: str | datetime.datetime
+    updated: str | datetime.datetime
+    
+    title: str
+    description: str
+    group: str
+    video_file: str
+    thumbnail_file: str
+    fps: int
+    checked: bool
+    audio_indexed: bool
+    video_indexed: bool
+    moderation_session: str | None
+
+
+class Violation(BaseModel):
+    """Single violation"""
+
+    id: str
+    created: str | datetime.datetime
+    updated: str | datetime.datetime
+
+    start: int
+    end: int
+    source_video: SingleVideo
+    violation_video: SingleVideo
+    original_start: int
+    original_end: int
+    max_score: float
+    min_score: float
+    avg_score: float
+    std_score: float
+    
+    marked_hard: bool
+    discarded: bool
+
+    moderation_session: str | None
+
+
+    
+class VideoWithViolations(BaseModel):
+    """Return type for get_video_with_probes"""
+    
+    video: SingleVideo
+    violations: list[Violation]
+
+
+class Filter(BaseModel):
+    key: str
+    value: str
+    
+    def build_params(self):
+        return f'{self.key}~"{self.value}"'
+    
+
+class GetVideosWithFilters(BaseModel):
+    page: int
+    per_page: int
+    filter: list[Filter] | None = []
+    sort: str | None = None
+    
+
+class UpdateVideo(BaseModel):
+    video_id: str
+    title: str | None = None
+    description: str | None = None
+    group: str | None = None
+    checked: bool | None = None
+    fps: int | None = None
+    
