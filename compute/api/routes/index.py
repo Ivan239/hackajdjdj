@@ -47,7 +47,7 @@ async def run_moderate(video_link):
             "qdrant_api_key": QDRANT_API_KEY,
             "qdrant_port": QDRANT_PORT,
             "batch_size": 300,
-            "threshold": 0.83,
+            "threshold": 0.7,
         }) as response:
             return await response.json()
             

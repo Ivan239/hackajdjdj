@@ -197,7 +197,7 @@ class ModerateBody(BaseModel):
     qdrant_api_key: str
     qdrant_port: int
     batch_size: int = 1000
-    threshold: int = VIOLATION_IMAGE_SIMILARITY_THRESHOLD
+    threshold: float = VIOLATION_IMAGE_SIMILARITY_THRESHOLD
 
 
 @compute.post('/moderate')
