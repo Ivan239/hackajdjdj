@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import Any, Literal
 from pocketbase import PocketBase
-from schema.audio import FingerprintData, RecordData
+from ...schema.audio import FingerprintData, RecordData
 from pocketbase import Client
 from pocketbase.utils import ClientResponseError
 from .database.functions import (

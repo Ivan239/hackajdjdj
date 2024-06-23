@@ -2,7 +2,7 @@ import json
 import os
 import librosa
 import numpy as np
-from schema.audio import Config
+from ...schema.audio import Config
 
 cfg_path = os.path.join(os.path.dirname(__file__), 'config.json')
 with open(cfg_path) as cfg:

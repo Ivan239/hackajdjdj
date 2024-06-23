@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from spectromap.spectromap import spectromap
-from schema.audio import Config
+from ...schema.audio import Config
 from operator import itemgetter
 from itertools import groupby
 import hashlib

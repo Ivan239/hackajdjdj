@@ -1,5 +1,5 @@
 from .engine import get_session
-from schema.audio import FingerprintData, RecordData
+from ....schema.audio import FingerprintData, RecordData
 
 def db_write(function):
     def wrapper(*args, **kwargs):

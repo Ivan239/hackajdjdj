@@ -6,7 +6,7 @@ import requests
 from .reader import read
 from .dbman import DBManager
 from .fingerprint import Fingerprint
-from schema.audio import (
+from ...schema.audio import (
     Dataset, 
     FingerprintData, 
     RecordData, 
@@ -24,8 +24,8 @@ with open(cfg_path) as cfg:
 
 class Recognizer:
     
-    def __init__(self, dbman: DBManager):
-        self._dbman = dbman
+    def __init__(self):
+        self._dbman = DBManager()
 
     def upload_record(self, data: Dataset):
         fingerprints: list[FingerprintData] = []
@@ -135,9 +135,9 @@ class Recognizer:
             record_hashes = len(self._dbman.fingerprints_by(record_id))
             result: MatchResult = {
                 'record_id': record_id,
-                'offset': offset,
-                'offset_sec': offset / default_cfg.sample_rate * default_cfg.n_overlap,
-                'confidence': hashes_matched / record_hashes,
+                'offset': float(offset),
+                'offset_sec': float(offset / default_cfg.sample_rate * default_cfg.n_overlap),
+                'confidence': float(hashes_matched / record_hashes),
             }
             record_results.append(result)
         return record_results
