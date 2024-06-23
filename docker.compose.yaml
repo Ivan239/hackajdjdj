@@ -4,15 +4,8 @@ services:
     ports:
       - "0.0.0.0:6333:6333"
     volumes:
-      - qdrant_data:/data
-      - ./data/qdrant:/data
-    environment:
-      - QDRANT_STORAGE_PATH=/data
-      - QDRANT_LOG_LEVEL=debug
-      - QDRANT_LOG_FILE=/data/qdrant.log
-      - QDRANT_HTTP_PORT=6333
-      - QDRANT_GRPC_PORT=6334
-      - QDRANT_METRIC_PORT=6335
+      - qdrant_data:/qdrant/storage
+      - ./data/qdrant:/qdrant/storage
     env_file:
       - .env
 
