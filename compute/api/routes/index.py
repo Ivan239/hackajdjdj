@@ -139,7 +139,6 @@ async def run_check(
                     file.seek(0)
 
                     top = results[0]
-                    print(top)
                     if top.record_id == v['video'].id:
                         real_violations.append({
                             "start": int(v['start'] / db_response.fps),
