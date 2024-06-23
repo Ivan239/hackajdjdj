@@ -133,12 +133,12 @@ class Recognizer:
         for record_id, offset, _ in record_matches[:top_n]:
             hashes_matched = dedup_hashes[record_id]
             record_hashes = len(self._dbman.fingerprints_by(record_id))
-            result: MatchResult = {
+            result: MatchResult = MatchResult(**{
                 'record_id': record_id,
                 'offset': float(offset),
                 'offset_sec': float(offset / default_cfg.sample_rate * default_cfg.n_overlap),
                 'confidence': float(hashes_matched / record_hashes),
-            }
+            })
             record_results.append(result)
         return record_results
 

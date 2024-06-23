@@ -43,13 +43,13 @@ def naive_clusters(labels, max_width=100) -> list[tuple]:
     return spans
 
 
-def has_violations(df: pd.DataFrame) -> bool:
+def has_violations(df: pd.DataFrame, thresh = VIOLATION_IMAGE_SIMILARITY_THRESHOLD) -> bool:
     """Checks on any violations"""
-    return (df.score > VIOLATION_IMAGE_SIMILARITY_THRESHOLD).any()
+    return (df.score > thresh).any()
 
-def get_violations(df: pd.DataFrame) -> pd.DataFrame:
+def get_violations(df: pd.DataFrame, thresh = VIOLATION_IMAGE_SIMILARITY_THRESHOLD) -> pd.DataFrame:
     """"""
-    df = df[df.score > VIOLATION_IMAGE_SIMILARITY_THRESHOLD]
+    df = df[df.score > thresh]
     f_ = df.frame.unique()
     f_.sort()
     if f_.shape[0] < 2:
@@ -197,6 +197,7 @@ class ModerateBody(BaseModel):
     qdrant_api_key: str
     qdrant_port: int
     batch_size: int = 1000
+    threshold: int = VIOLATION_IMAGE_SIMILARITY_THRESHOLD
 
 
 @compute.post('/moderate')
@@ -217,8 +218,8 @@ def moderate(body: ModerateBody):
     df = df.loc[df.groupby('frame').score.idxmax()]
     violations = []      
     for key, d in df.groupby('video_name'):
-        if has_violations(d):
-            for start, end in get_violations(d):
+        if has_violations(d, body.threshold):
+            for start, end in get_violations(d, body.threshold):
                 violations.append({
                     'start': int(start),
                     'end': int(end),

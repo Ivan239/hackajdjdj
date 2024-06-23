@@ -12,3 +12,4 @@ librosa
 sqlalchemy
 psycopg2-binary
 pandas
+aiohttp

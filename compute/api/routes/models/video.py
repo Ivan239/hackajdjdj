@@ -24,9 +24,9 @@ class SingleVideo(BaseModel):
 class Violation(BaseModel):
     """Single violation"""
 
-    id: str
-    created: str | datetime.datetime
-    updated: str | datetime.datetime
+    id: str | None = None
+    created: str | datetime.datetime | None = None
+    updated: str | datetime.datetime | None = None
 
     start: int
     end: int
@@ -34,15 +34,15 @@ class Violation(BaseModel):
     violation_video: SingleVideo
     original_start: int
     original_end: int
-    max_score: float
-    min_score: float
-    avg_score: float
-    std_score: float
+    max_score: float = 0.
+    min_score: float = 0.
+    avg_score: float = 0.
+    std_score: float = 0.
     
-    marked_hard: bool
-    discarded: bool
+    marked_hard: bool = False
+    discarded: bool = False
 
-    moderation_session: str | None
+    moderation_session: str | None = None
 
 
     
