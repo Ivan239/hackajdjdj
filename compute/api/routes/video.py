@@ -98,15 +98,19 @@ async def get_videos_with_violations(
                     'filter': f"moderation_session~'{moderation_session_id}'"
                 }
             )
-            output = []
-            for violation in violations:
-                violation.source_video = make_video_with_urls(
-                    client.collection('videos').get_one(violation.source_video_id)
-                ).__dict__
-                violation.violation_video = make_video_with_urls(
-                    client.collection('videos').get_one(violation.violation_video_id)
-                ).__dict__
-                output.append(violation.__dict__)
+        else:
+            violations = client.collection('violations').get_full_list()
+
+        output = []
+        for violation in violations:
+            violation.source_video = make_video_with_urls(
+                client.collection('videos').get_one(violation.source_video_id)
+            ).__dict__
+            violation.violation_video = make_video_with_urls(
+                client.collection('videos').get_one(violation.violation_video_id)
+            ).__dict__
+            output.append(violation.__dict__)
+        
             
     except ClientResponseError as e:
         api_logger.error(f"GET /videos_with_violations: {e.status} {e.data}")
