@@ -4,21 +4,21 @@ import styles from './VideoReport.module.scss';
 import { Collapse } from 'react-collapse';
 import { useEffect, useState } from 'react';
 import Chevron from '../assets/ChevronRight.svg?react';
-import Copy from '../assets/Copy.svg?react';
+import ArrowRight from '../assets/ArrowRight.svg?react';
 import Download from '../assets/Download.svg?react';
 import classNames from 'classnames';
-import { copyToClipboard } from '../functions/copyToClipboard';
 import { Author } from '../components/Author';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import ReactDOMServer from 'react-dom/server';
 import { ReportPage } from './ReportPage';
 import { Loader } from '../components/Loader';
-import { useSearchParams } from 'react-router-dom';
+import { createSearchParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { SERVER_ADDRESS } from '../constants';
+import { SERVER_ADDRESS, WARNING_THREHOLD } from '../constants';
 import dayjs from 'dayjs';
-import { formatTimeHHMM } from '../functions/formatTimeHHMM';
+import { formatTime } from '../functions/formatTime';
+import { RootPaths } from '.';
 
 export const VideoReport = (): JSX.Element => {
   const [searchParams] = useSearchParams();
@@ -41,13 +41,13 @@ export const VideoReport = (): JSX.Element => {
       .then((res) => {
         setVideoData(res.data);
         axios
-          .get(`${SERVER_ADDRESS}/video_probes/`, {
+          .get(`${SERVER_ADDRESS}/violations/`, {
             params: {
-              video_id: searchParams.get('video'),
+              violation_video_id: searchParams.get('video'),
             },
           })
           .then((res) => {
-            setProbes(res.data.violations);
+            setProbes(res.data);
             setLoading(false);
           })
           .catch(() => setLoading(false));
@@ -61,11 +61,14 @@ export const VideoReport = (): JSX.Element => {
     setIsGeneralOpen(showOrHide);
   };
 
-  const probesLength = probes?.reduce(
+  let probesLength = probes?.reduce(
     (total, probe) => total + ((probe.end as number) - (probe.start as number)),
     0,
   );
-  const plagiatPart = ((probesLength / videoLength) * 100 || 0).toFixed(1);
+  if (probesLength > videoLength) {
+    probesLength = videoLength;
+  }
+  const plagiatPart = (probesLength / videoLength) * 100 || 0;
 
   const downloadReport = (): void => {
     const htmlString = ReactDOMServer.renderToString(
@@ -73,6 +76,7 @@ export const VideoReport = (): JSX.Element => {
         name={videoData?.title || ''}
         author="Сергей Малинин"
         probes={probes}
+        // @ts-expect-error fine
         plagiatPart={plagiatPart}
         currentPreview={videoData?.thumbnail_file || ''}
       />,
@@ -133,13 +137,30 @@ export const VideoReport = (): JSX.Element => {
     }
   });
 
+  // @ts-expect-error fine
   const intervals: Interval[] = probes.map((probe) => ({
     start: probe.start as number,
     duration: (probe.end as number) - (probe.start as number),
     color: '#ff645f',
-    type: 'error',
+    // @ts-expect-error fine
+    type: probe.avg_score > WARNING_THREHOLD ? 'error' : 'warning',
     id: probe.id as string,
+    originalStart: probe.original_start,
+    originalEnd: probe.original_end,
+    // @ts-expect-error fine
+    originalId: probe.source_video.id,
   }));
+
+  const navigate = useNavigate();
+
+  const openOriginal = (id: string): void => {
+    navigate({
+      pathname: RootPaths.preview,
+      search: createSearchParams({
+        video: id,
+      }).toString(),
+    });
+  };
 
   return (
     <div className={styles.page}>
@@ -147,7 +168,6 @@ export const VideoReport = (): JSX.Element => {
         Отчет о проверке
         {videoData?.title ? (
           <div className={styles.titleBtns}>
-            <div className={styles.smallDivider} />
             <div className={styles.titleBtn} onClick={downloadReport}>
               <Download className={styles.titleImg} />
               Скачать отчет по видео
@@ -268,30 +288,6 @@ export const VideoReport = (): JSX.Element => {
                               видео
                             </div>
                             <div className={styles.cardValue}>{uniqueVideoIdsCount}</div>
-                            {uniqueVideoIdsCount ? (
-                              <>
-                                <div className={styles.verticalDivider} />
-                                <div className={styles.videoList}>
-                                  <a
-                                    className={styles.videoItem}
-                                    href="https://www.google.com/"
-                                    target="_blank"
-                                  >
-                                    {Object.values(uniqueVideoIds)?.map((elem) => (
-                                      <>
-                                        {elem}
-                                        <Copy
-                                          className={styles.copy}
-                                          onClick={(e) =>
-                                            copyToClipboard(e, 'https://www.google.com/')
-                                          }
-                                        />
-                                      </>
-                                    ))}
-                                  </a>
-                                </div>
-                              </>
-                            ) : null}
                           </div>
                         </InfoItem>
                       </div>
@@ -332,32 +328,50 @@ export const VideoReport = (): JSX.Element => {
                                     <div className={styles.secondLineValue}>
                                       <div className={styles.cardNoteTitle}>Начало</div>
                                       <div className={styles.cardTime}>
-                                        {formatTimeHHMM(probe.start as number)}
+                                        {formatTime(probe.start as number)}
                                       </div>
                                     </div>
                                     <div className={styles.secondLineValue}>
                                       <div className={styles.cardNoteTitle}>Конец</div>
                                       <div className={styles.cardTime}>
-                                        {' '}
-                                        {formatTimeHHMM(probe.end as number)}
+                                        {formatTime(probe.end as number)}
                                       </div>
                                     </div>
                                   </div>
                                 </div>
                               </InfoItem>
-                              {/* <InfoItem>
+                              <InfoItem>
                                 <div>
                                   <div className={styles.cardFirstLine}>
                                     <div className={styles.cardName}>
-                                      <span className={styles.underline}>
-                                        Оригинальное
-                                        <br />
-                                        видео
-                                      </span>
+                                      Оригинальное
+                                      <br />
+                                      видео
+                                    </div>
+                                    <div
+                                      className={styles.cardValue}
+                                      // @ts-expect-error source is object
+                                      onClick={() => openOriginal(probe?.source_video?.id)}
+                                    >
+                                      <ArrowRight className={styles.cardArrow} />
+                                    </div>
+                                  </div>
+                                  <div className={styles.cardSecondLine}>
+                                    <div className={styles.secondLineValue}>
+                                      <div className={styles.cardNoteTitle}>Начало</div>
+                                      <div className={styles.cardTime}>
+                                        {formatTime(probe.original_start as number)}
+                                      </div>
+                                    </div>
+                                    <div className={styles.secondLineValue}>
+                                      <div className={styles.cardNoteTitle}>Конец</div>
+                                      <div className={styles.cardTime}>
+                                        {formatTime(probe.original_end as number)}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                        </InfoItem> */}
+                              </InfoItem>
                             </div>
                           </div>
                         ))}

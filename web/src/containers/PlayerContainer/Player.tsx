@@ -10,6 +10,10 @@ import { Tooltip } from 'react-tooltip';
 import { ArrowLeft } from '../../components/ArrowLeft';
 import { ArrowRight } from '../../components/ArrowRight';
 import { Loader } from '../../components/Loader';
+import { formatTime } from '../../functions/formatTime';
+import { useNavigate } from 'react-router';
+import { RootPaths } from '../../pages';
+import { createSearchParams } from 'react-router-dom';
 
 interface VideoPlayerProps {
   url: string;
@@ -26,16 +30,9 @@ export type Interval = {
   color: string;
   type: 'warning' | 'error';
   id: string;
-};
-
-const formatTime = (seconds: number): string => {
-  const hrs = Math.floor(seconds / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (hrs > 0) {
-    return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  originalStart: number;
+  originalEnd: number;
+  originalId: string;
 };
 
 export const Player: React.FC<VideoPlayerProps> = ({
@@ -350,6 +347,15 @@ const InfoBlock = ({
   onNextSelected: () => void;
   onClose: () => void;
 }): JSX.Element => {
+  const navigate = useNavigate();
+  const openPreview = (): void => {
+    navigate({
+      pathname: RootPaths.preview,
+      search: createSearchParams({
+        video: currentInterval.originalId,
+      }).toString(),
+    });
+  };
   return (
     <div className={styles.info} onClick={(e) => e.stopPropagation()}>
       <div className={styles.infoContent}>
@@ -380,18 +386,16 @@ const InfoBlock = ({
         </div>
         <div className={styles.infoItem}>
           Оригинальное видео:{' '}
-          <a
-            href="https://www.google.com"
-            target="_blank"
-            className={classNames(styles.infoValue, styles.infoLink)}
-          >
+          <a className={classNames(styles.infoValue, styles.infoLink)} onClick={openPreview}>
             ссылка
           </a>
         </div>
         <div className={styles.infoItem}>
-          Промежуток оригинала: <span className={styles.infoValue}>00:00:00 - 00:00:00</span>
+          Промежуток оригинала:{' '}
+          <span className={styles.infoValue}>
+            {formatTime(currentInterval.originalStart)} - {formatTime(currentInterval.originalEnd)}
+          </span>
         </div>
-        <div className={styles.infoReport}>Смотреть отчет</div>
         <div className={styles.infoArrows}>
           <ArrowLeft disabled={!prevAvailable} onClick={() => onPrevSelected()} />
           <ArrowRight disabled={!nextAvailable} onClick={() => onNextSelected()} />

@@ -24,6 +24,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px 12px;
+  padding: 0 1px;
 }
 
 .card {
@@ -34,9 +35,14 @@
   width: calc(50% - 6px);
   gap: 24px;
   align-items: center;
+  cursor: pointer;
 
   @media (max-width: 1250px) {
     width: 100%;
+  }
+
+  &:hover {
+    outline: 1px solid #bfc9d4;
   }
 }
 
@@ -77,7 +83,7 @@
   gap: 6px;
   position: relative;
   width: fit-content;
-  font-size: 14px;
+  font-size: 13.2px;
   font-weight: 600;
   word-break: break-word;
 }
@@ -136,5 +142,30 @@
   bottom: 8px;
   width: 100%;
   z-index: 1;
+}
+
+.searchBar {
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  background-color: white;
+  padding: 0 12px;
+  margin-bottom: 16px;
+}
+
+.searchIcon {
+  margin-right: 8px;
+}
+
+.search {
+  height: 100%;
+  border: none !important;
+  outline: none;
+  flex-grow: 1;
+
+  &::placeholder {
+    color: #889baf;
+  }
 }
 

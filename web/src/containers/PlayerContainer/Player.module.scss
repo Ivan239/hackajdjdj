@@ -222,6 +222,8 @@
 }
 
 .infoLink {
+  cursor: pointer;
+
   &:hover {
     color: var(--error-red-hovered);
   }

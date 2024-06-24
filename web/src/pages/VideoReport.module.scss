@@ -189,6 +189,7 @@
 .videoItem {
   display: flex;
   gap: 6px;
+  justify-content: space-between;
   align-items: center;
   text-decoration: underline;
   color: var(--bali-hai);
@@ -270,5 +271,16 @@
 .videoDescription {
   font-size: 13px;
   color: black;
+}
+
+.cardArrow {
+  width: 20px;
+  stroke: var(--error-red);
+  cursor: pointer;
+}
+
+.cardSecondLine {
+  border-top: 1px solid var(--athens-gray);
+  margin-top: 8px;
 }
 

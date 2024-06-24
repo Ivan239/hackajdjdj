@@ -59,7 +59,20 @@ const menuItems: MenuItem[] = [
 export const Menu = (): JSX.Element => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [selectedItem, setSelectedItem] = useState<string | undefined>(location.pathname);
+
+  const getDefaultItem = (): string => {
+    console.log(location.pathname);
+    switch (location.pathname) {
+      case RootPaths.preview:
+        return RootPaths.base;
+      case RootPaths.report:
+        return RootPaths.moderation;
+      default:
+        return location.pathname;
+    }
+  };
+
+  const [selectedItem, setSelectedItem] = useState<string | undefined>(getDefaultItem());
 
   const onMenuItemChange = (item: MenuItem): void => {
     if (!item.disabled) {
