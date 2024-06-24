@@ -160,7 +160,11 @@ export const ReportPage = ({
                       <div className={styles.flexTd}>
                         Заимствование
                         <br />
-                        промежутка, %<div className={cardsStyles.cardValue}>100</div>
+                        промежутка, %
+                        <div className={cardsStyles.cardValue}>
+                          {' '}
+                          {((probes?.[0]?.avg_score as number) * 100).toFixed(2)}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -244,7 +248,10 @@ export const ReportPage = ({
                         <div className={styles.flexTd}>
                           Заимствование
                           <br />
-                          промежутка, %<div className={cardsStyles.cardValue}>100</div>
+                          промежутка, %
+                          <div className={cardsStyles.cardValue}>
+                            {((probe?.avg_score as number) * 100).toFixed(2)}
+                          </div>
                         </div>
                       </td>
                     </tr>
