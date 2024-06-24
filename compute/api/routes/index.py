@@ -173,7 +173,7 @@ async def run_check(
         
         db_violations.append(dv)
         
-    client.collection('videos').update(body_params={
+    client.collection('videos').update(db_response.id, body_params={
         "checked": True,
         "moderation_session": moderation_session_id
     })
