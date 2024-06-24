@@ -14,7 +14,7 @@ class SingleVideo(BaseModel):
     group: str
     video_file: str
     thumbnail_file: str
-    fps: int
+    fps: float
     checked: bool
     audio_indexed: bool
     video_indexed: bool
