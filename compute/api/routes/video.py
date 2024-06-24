@@ -90,32 +90,15 @@ async def get_video(
 @router.get("/all_violations/")
 async def get_videos_with_violations(
     moderation_session_id: str | None = None
-) -> list[VideoWithViolations]:
+) -> list[Violation]:
     try:
         if moderation_session_id is not None:
-            db_response = client.collection('videos').get_full_list(
+            violations = client.collection('violations').get_full_list(
                 query_params={
                     'filter': f"moderation_session~'{moderation_session_id}'"
                 }
             )
-        else:
-            db_response = client.collection('videos').get_full_list()
-    except ClientResponseError as e:
-        api_logger.error(f"GET /videos_with_violations: {e.status} {e.data}")
-        raise HTTPException(status_code=e.status, detail=e.data)
-    
-    outputs = []
-    
-    for video in db_response:
-        video = make_video_with_urls(video)
-
-        try:
-            violations = client.collection('violations').get_full_list(
-                query_params={
-                    'filter': f"source_video_id~'{video.id}'"
-                }
-            )
-
+            output = []
             for violation in violations:
                 violation.source_video = make_video_with_urls(
                     client.collection('videos').get_one(violation.source_video_id)
@@ -123,13 +106,13 @@ async def get_videos_with_violations(
                 violation.violation_video = make_video_with_urls(
                     client.collection('videos').get_one(violation.violation_video_id)
                 ).__dict__
-                
-            outputs.append(VideoWithViolations(video=video.__dict__, violations=[v.__dict__ for v in violations] if violations else list()))
+                output.append(violation.__dict__)
             
-        except ClientResponseError as e:
-            raise HTTPException(status_code=e.status, detail=e.data)
-            
-    return outputs
+    except ClientResponseError as e:
+        api_logger.error(f"GET /videos_with_violations: {e.status} {e.data}")
+        raise HTTPException(status_code=e.status, detail=e.data)
+    
+    return output
 
 @router.get('/violations')
 async def get_violations(
