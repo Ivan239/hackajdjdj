@@ -113,7 +113,7 @@ async def run_check(
     async with aiohttp.ClientSession() as session:
         async with session.get(file) as resp:
             violations, video_bytes = await asyncio.gather(
-                run_moderate(file),
+                run_moderate(file, threshold),
                 resp.read()
             )
 
