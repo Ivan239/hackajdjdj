@@ -148,8 +148,8 @@ async def run_check(
                     real_violations.append({
                         "start": int(v['start'] / db_response.fps),
                         "end": int(v['end'] / db_response.fps),
-                        "violation_video": db_response.id,
-                        "source_video": v['video'].id,
+                        "violation_video_id": db_response.id,
+                        "source_video_id": v['video'].id,
                         "max_score": v['max_score'],
                         "min_score": v['min_score'],
                         "avg_score": v['avg_score'],
