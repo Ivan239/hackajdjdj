@@ -6,7 +6,7 @@ QDRANT_HOST = os.getenv('QDRANT_HOST')
 QDRANT_PORT = os.getenv('QDRANT_PORT')
 
 qdrant = QdrantClient(
-    host=QDRANT_HOST,
+    url=QDRANT_HOST,
     api_key=QDRANT_API_KEY,
     port=QDRANT_PORT,
     timeout=3600

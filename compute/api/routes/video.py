@@ -10,9 +10,11 @@ import base64
 import requests
 
 from ..xpocketbase import client
-from .models.video import GetVideosWithFilters, SingleVideo, UpdateVideo, VideoWithViolations, Filter, Violation
+from .models.video import Embedding, GetVideosWithFilters, SingleVideo, UpdateVideo, VideoWithViolations, Filter, Violation
 from pocketbase.client import FileUpload
 from pocketbase.utils import ClientResponseError
+from ..qdrant import qdrant, models
+from ..audio.audio_detect.database.functions import get_fingerprints
 
 router = APIRouter(tags=["Video Basic Operations"])
 api_logger = logging.getLogger('api')
@@ -305,3 +307,25 @@ def violation_frames(
     }
     
     
+@router.get('/embeddings')
+def get_embeddings(video_id: str) -> Embedding:
+    points: dict[int, list[float]] = {}
+    offset = None
+    while True:
+        result, offset  = qdrant.scroll(
+            'dev__experiment',
+            scroll_filter=models.Filter(must=[models.FieldCondition(key='video_name', match=models.MatchValue(value=video_id))]),
+            limit=128,
+            with_payload=True,
+            with_vectors=True,
+            offset=offset
+        )
+        for r in result:
+            points[r.payload['second']] = r.vector
+        
+        if offset is None:
+            break
+            
+    fingerprints = [(x.hash, x.offset) for x in get_fingerprints(record_id=video_id)]
+    
+    return Embedding(video_frame_embeddings=points, audio_fingerprints=fingerprints)

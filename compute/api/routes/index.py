@@ -39,15 +39,15 @@ async def compute_index(video_id, video_name, video_link):
             return await response.json()
          
    
-async def run_moderate(video_link):
+async def run_moderate(video_link, threshold: float):
     async with aiohttp.ClientSession() as session:
         async with session.post(f'http://{COMPUTE_API}/moderate', json={
             "video_link": str(video_link),
             "qdrant_host": QDRANT_HOST,
             "qdrant_api_key": QDRANT_API_KEY,
             "qdrant_port": QDRANT_PORT,
-            "batch_size": 300,
-            "threshold": 0.7,
+            "batch_size": 256,
+            "threshold": threshold,
         }) as response:
             return await response.json()
             
@@ -95,7 +95,8 @@ async def index_video(
 @router.post("/run_check/")
 async def run_check(
     video_id: str,
-    moderation_session_id: str
+    moderation_session_id: str,
+    threshold: float = 0.8
 ):
     try:
         db_response = client.collection('videos').get_one(video_id)
@@ -145,6 +146,10 @@ async def run_check(
                             "end": int(v['end'] / db_response.fps),
                             "violation_video": db_response.id,
                             "source_video": v['video'].id,
+                            "max_score": v['max_score'],
+                            "min_score": v['min_score'],
+                            "avg_score": v['avg_score'],
+                            "std_score": v['std_score'],
                             "original_start": abs(int(top.offset_sec)),
                             "original_end": abs(int(top.offset_sec)) + int(v['end'] / db_response.fps) - int(v['start'] / db_response.fps),
                         })

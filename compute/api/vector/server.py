@@ -55,7 +55,7 @@ def get_violations(df: pd.DataFrame, thresh = VIOLATION_IMAGE_SIMILARITY_THRESHO
     if f_.shape[0] < 2:
         return []
     frame_lag = f_[1] - f_[0]
-    spans = naive_clusters(f_, frame_lag * 25)
+    spans = naive_clusters(f_, frame_lag * 50)
     return [sp for sp in spans if sp[1] - sp[0] >= frame_lag * 10]
 
 
@@ -224,8 +224,10 @@ def moderate(body: ModerateBody):
                     'start': int(start),
                     'end': int(end),
                     'video_name': str(key),
-                    'originalStart': 0,
-                    'originalEnd': 0,
+                    'max_score': float(d[(d.frame >= start) & (d.frame <= end)].score.max()),
+                    'min_score': float(d[(d.frame >= start) & (d.frame <= end)].score.min()),
+                    'avg_score': float(d[(d.frame >= start) & (d.frame <= end)].score.mean()),
+                    'std_score': float(d[(d.frame >= start) & (d.frame <= end)].score.std()),
                 })
 
     return violations

@@ -76,3 +76,7 @@ class UpdateVideo(BaseModel):
     checked: bool | None = None
     fps: int | None = None
     
+    
+class Embedding(BaseModel):
+    video_frame_embeddings: dict[int, list[float]]
+    audio_fingerprints: list[tuple[str, int]]
