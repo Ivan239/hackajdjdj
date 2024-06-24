@@ -140,24 +140,26 @@ async def run_check(
                     file.seek(0)
 
                     top = results[0]
-                    if top.record_id == v['video'].id:
-                        real_violations.append({
-                            "start": int(v['start'] / db_response.fps),
-                            "end": int(v['end'] / db_response.fps),
-                            "violation_video": db_response.id,
-                            "source_video": v['video'].id,
-                            "max_score": v['max_score'],
-                            "min_score": v['min_score'],
-                            "avg_score": v['avg_score'],
-                            "std_score": v['std_score'],
-                            "original_start": abs(int(top.offset_sec)),
-                            "original_end": abs(int(top.offset_sec)) + int(v['end'] / db_response.fps) - int(v['start'] / db_response.fps),
-                        })
-                        if moderation_session_id:
-                            real_violations[-1]['moderation_session'] = moderation_session_id
+                
+                    real_violations.append({
+                        "start": int(v['start'] / db_response.fps),
+                        "end": int(v['end'] / db_response.fps),
+                        "violation_video": db_response.id,
+                        "source_video": v['video'].id,
+                        "max_score": v['max_score'],
+                        "min_score": v['min_score'],
+                        "avg_score": v['avg_score'],
+                        "std_score": v['std_score'],
+                        "marked_hard": top.record_id == v['video'].id,
+                        "original_start": abs(int(top.offset_sec)),
+                        "original_end": abs(int(top.offset_sec)) + int(v['end'] / db_response.fps) - int(v['start'] / db_response.fps),
+                    })
 
-                        real_sources.append(v['video'])
-                        real_vvideos.append(db_response)
+                    if moderation_session_id:
+                        real_violations[-1]['moderation_session'] = moderation_session_id
+
+                    real_sources.append(v['video'])
+                    real_vvideos.append(db_response)
 
     db_violations = []
     for rv, source, vil in zip(real_violations, real_sources, real_vvideos):            
