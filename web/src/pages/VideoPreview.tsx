@@ -6,7 +6,7 @@ import { Author } from '../components/Author';
 import { Loader } from '../components/Loader';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { SERVER_ADDRESS } from '../constants';
+import { SERVER_ADDRESS, WARNING_THREHOLD } from '../constants';
 import dayjs from 'dayjs';
 import { AxisOptions, Chart } from 'react-charts';
 import GetDocument from '../assets/GetDocument.svg?react';
@@ -73,7 +73,6 @@ export const VideoPreview = (): JSX.Element => {
       {
         getValue: (datum) => datum?.amount,
         scaleType: 'linear',
-        stacked: true,
         max: 10,
         formatters: {
           scale: (value) => value?.toFixed(),
@@ -98,7 +97,11 @@ export const VideoPreview = (): JSX.Element => {
 
       const newData: Series[] = [
         {
-          label: 'Violations',
+          label: 'Ошибки',
+          data: timeData,
+        },
+        {
+          label: 'Возможные ошибки',
           data: timeData,
         },
       ];
@@ -107,12 +110,17 @@ export const VideoPreview = (): JSX.Element => {
         const start = Math.floor(elem.start / timeStamp);
         const end = Math.ceil(elem.end / timeStamp);
 
+        const index = elem.avg_score > WARNING_THREHOLD ? 0 : 1;
+        console.log(index, videoViolations);
+
         for (let i = start; i < end; i++) {
-          if (newData[0]?.data?.[i]) {
-            newData[0].data[i].amount += 1;
+          if (newData[index]?.data?.[i]) {
+            newData[index].data[i].amount += 1;
           }
         }
       });
+
+      console.log(newData);
 
       setChartData(newData);
     }
@@ -205,9 +213,9 @@ export const VideoPreview = (): JSX.Element => {
                       primaryAxis,
                       secondaryAxes,
                       tooltip: false,
-                      getSeriesStyle: () => {
+                      getSeriesStyle: (elem) => {
                         return {
-                          color: '#F32121',
+                          color: elem?.index === 0 ? '#F32121' : '#EDAB00',
                         };
                       },
                     }}
