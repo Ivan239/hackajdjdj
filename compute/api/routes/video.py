@@ -4,7 +4,7 @@ import shutil
 import tempfile
 
 import cv2
-from fastapi import APIRouter, Body, File, UploadFile, HTTPException
+from fastapi import APIRouter, Body, File, UploadFile, HTTPException, Query
 from typing import Annotated, Literal
 import base64
 import requests
@@ -27,11 +27,12 @@ def make_video_with_urls(video):
 @router.post("/video/")
 async def upload_video(
     file: UploadFile = File(...),
-    title: str = "Untitled",
-    description: str = None,
-    group: Literal["index", "valid", "test"] = None,
-    moderate_session_id: str = None
+    title: Annotated[str, Query(description="Название видео")] = "Untitled",
+    description: Annotated[str | None, Query(description="Описание видео")] = None,
+    group: Annotated[Literal["index", "valid", "test"], Query(description="Группа видео. index - видео в базе, valid/test - видео на проверку")] = None,
+    moderate_session_id: Annotated[str | None, Query(description="Идентификатор сессии модерации (при загрузке в ней)")] = None
 ) -> SingleVideo:
+    """Загрузка единичного видео в базу для последующей обработки."""
     with tempfile.NamedTemporaryFile() as temp_file:
         shutil.copyfileobj(file.file, temp_file)
         temp_file.seek(0)
